@@ -1,0 +1,81 @@
+schieber-jass-apex-multiagent:
+    run: APEX
+    env: schieber_jass_multi_agent_env
+    stop:
+        info/num_steps_trained: 500_000_000
+    checkpoint_freq: 10
+    checkpoint_at_end: True
+    keep_checkpoints_num: 5
+    checkpoint_score_attr: episode_reward_mean
+    config:
+
+        # ----------------- #
+        # Execution params
+        # ----------------- #
+        # since we only use the main worker because we currently only have one simulator running
+        num_workers: 6
+        num_envs_per_worker: 1
+        num_gpus: 1
+
+        # ----------------- #
+        # Common training params
+        # ----------------- #
+        # Number of steps after which the episode is forced to terminate
+        # horizon: 100
+        # Calculate rewards but don't reset the environment when the horizon is hit
+        # soft_horizon: True
+        lr:  5.0e-5
+        timesteps_per_iteration: 1000
+
+        framework: torch
+
+        # How to build per-Sampler (RolloutWorker) batches, which are then
+        # usually concat'd to form the train batch. Note that "steps" below can
+        # mean different things (either env- or agent-steps) and depends on the
+        # `count_steps_by` (multiagent) setting below.
+        # truncate_episodes: Each produced batch (when calling
+        #   RolloutWorker.sample()) will contain exactly `rollout_fragment_length`
+        #   steps. This mode guarantees evenly sized batches, but increases
+        #   variance as the future return must now be estimated at truncation
+        #   boundaries.
+        # complete_episodes: Each unroll happens exactly over one episode, from
+        #   beginning to end. Data collection will not stop unless the episode
+        #   terminates or a configured horizon (hard or soft) is hit.
+        batch_mode: complete_episodes
+
+        # ----------------- #
+        # APEX DQN training params
+        # ----------------- #
+        n_step: 3
+        prioritized_replay_alpha: 0.8
+        prioritized_replay_beta: 0.4
+        final_prioritized_replay_beta: 1
+        prioritized_replay_beta_annealing_timesteps: 20_000
+        buffer_size: 500_000 # replay buffer size
+        learning_starts: 50_000
+        rollout_fragment_length: 50
+        train_batch_size: 256
+        target_network_update_freq: 200_000
+        exploration_config:
+            type: PerWorkerEpsilonGreedy
+
+        env_config:
+            observation: conv_observation_builder
+            wandb:
+                entity: aburli
+                project: jass-gym
+                group: MULTIAGENT
+                tags: [ "apex", "multiagent" ]
+        model:
+            custom_model: action_masking_visionnet
+            conv_filters: [
+                [64, [2, 5], 1],
+                [64, [2, 5], 1],
+                [64, [2, 5], 1],
+                [64, [2, 5], 1],
+                [256, [4, 9], 1]
+            ]
+            conv_activation: tanh
+            post_fcnet_activation: tanh
+
+

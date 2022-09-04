@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  train:
+    build: .
+    network_mode: host
+    volumes:
+      - .:/app
+    command: sjgym --file /app/resources/apex_multiagent.yaml --log
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ '0' ]
+              capabilities: [ gpu ]
+
+  test:
+      build:
+          context: .
+          args:
+              DEV: 1
+      entrypoint: []
+      volumes:
+          - .:/app
+      command: pytest --forked -n auto --timeout=120 /app/test -v
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                device_ids: [ '0' ]
+                capabilities: [ gpu ]
+
+
