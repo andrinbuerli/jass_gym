@@ -69,13 +69,18 @@ schieber-jass-apex-multiagent:
         model:
             custom_model: action_masking_visionnet
             conv_filters: [
-                [64, [2, 5], 1],
-                [64, [2, 5], 1],
-                [64, [2, 5], 1],
-                [64, [2, 5], 1],
+                [256, [2, 3], 1],
+                [256, [2, 3], 1],
+                [256, [2, 3], 1],
+                [256, [2, 3], 1],
+                [256, [2, 3], 1],
+                [256, [2, 3], 1],
+                [256, [2, 3], 1],
+                [256, [2, 3], 1],
+                [256, [2, 3], 1],
+                [256, [2, 3], 1],
                 [256, [4, 9], 1]
             ]
             conv_activation: tanh
-            post_fcnet_activation: tanh
 
 

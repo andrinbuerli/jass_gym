@@ -60,31 +60,32 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
             raise ValueError("Env needs to be reset initially")
 
         if len(action_dict) != 1 or self._game.state.player not in action_dict:
-            raise ValueError(f"Only player {self._game.state.player} can select action")
+            raise ValueError(f"Only current_player {self._game.state.player} can select action")
 
         action = action_dict[self._game.state.player]
 
-        player = self._game.state.player
-        team = player % 2
-        other_team = (player + 1) % 2
+        current_player = self._game.state.player
+        team = current_player % 2
+        other_team = (current_player + 1) % 2
         self._game.perform_action_full(action)
-        rewards = self._game.state.points - self.prev_points[player]
+        rewards = self._game.state.points - self.prev_points[current_player]
         reward = rewards[team] - rewards[other_team]
-        self.prev_points[player] = np.copy(self._game.state.points)
+        self.prev_points[current_player] = np.copy(self._game.state.points)
         done = self._game.state.hands.sum() == 0
         obs = self._get_observation(done)
 
         self.cum_reward_team += rewards
 
+        next_player = self._game.state.player
         return {
-                   self._game.state.player: obs
+                   next_player: obs
                }, {
-                   self._game.state.player: reward
+                   next_player: reward
                }, {
-                   self._game.state.player: done,
+                   next_player: done,
                    "__all__": done
                }, {
-                   self._game.state.player: {"cum_reward_team": self.cum_reward_team}
+                   next_player: {"cum_reward_team": self.cum_reward_team}
                }
 
     def _get_observation(self, done=False):
