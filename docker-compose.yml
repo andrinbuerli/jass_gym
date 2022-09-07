@@ -5,6 +5,7 @@ services:
     network_mode: host
     volumes:
       - .:/app
+      - ./ray_results:/home/ray/ray_results
     command: sjgym --file /app/resources/apex_multiagent.yaml --log
     deploy:
       resources:
