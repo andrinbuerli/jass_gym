@@ -60,8 +60,6 @@ class SchieberJassGymCli(Callable):
 
         loggers = [
             WandbLoggerCallback(
-                project="jass-gym",
-                entity="andrinburli",
                 api_key_file=os.path.join(os.path.dirname(__file__), "../.wandbkey"),
             )
         ] if self.args.log else []

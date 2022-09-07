@@ -16,12 +16,10 @@ class WandbLoggerCallback(LoggerCallback):
     Log ray trial results and custom metrics to weights and biases.
     """
 
-    def __init__(self, entity, project, group=None, api_key_file=None):
+    def __init__(self, group=None, api_key_file=None):
         self.group = group
         self.run = None
         self.metrics_queue_dict = {}
-        self.project = project
-        self.entity = entity
         with open(api_key_file, "r") as f:
             api_key = f.read().strip()
         wandb.login(key=api_key, relogin=True)
@@ -44,8 +42,6 @@ class WandbLoggerCallback(LoggerCallback):
                     trial.trainable_name,
                     queue,
                     trial.config,
-                    self.project,
-                    self.entity,
                 ),
             )
             p.start()
@@ -103,7 +99,7 @@ class WandbLoggerCallback(LoggerCallback):
         wandb.join()
 
     @staticmethod
-    def _logger_process(run: str, queue: multiprocessing.Queue, config: dict, project: str, entity: str):
+    def _logger_process(run: str, queue: multiprocessing.Queue, config: dict):
         """
         Each logger has to run in a separate process
         :param queue: the queue object containing the log values to be written
@@ -112,7 +108,7 @@ class WandbLoggerCallback(LoggerCallback):
         """
         run_name = "_".join([run, config["env"]]) + "_" + datetime.now().strftime("%m-%d-%Y%_H-%M-%S")
         run = wandb.init(
-            entity=entity, reinit=True, name=run_name, project=project, **config.get("env_config", {}).get("wandb", {})
+            reinit=True, name=run_name, **config.get("env_config", {}).get("wandb", {})
         )
 
         if config:

@@ -2,7 +2,7 @@ schieber-jass-apex-multiagent:
     run: APEX
     env: schieber_jass_multi_agent_env
     stop:
-        info/num_steps_trained: 500_000_000
+        training_iteration: 100_000_000
     checkpoint_freq: 10
     checkpoint_at_end: True
     keep_checkpoints_num: 5
@@ -54,7 +54,7 @@ schieber-jass-apex-multiagent:
         buffer_size: 500_000 # replay buffer size
         learning_starts: 50_000
         rollout_fragment_length: 50
-        train_batch_size: 256
+        train_batch_size: 512
         target_network_update_freq: 200_000
         exploration_config:
             type: PerWorkerEpsilonGreedy
@@ -62,7 +62,7 @@ schieber-jass-apex-multiagent:
         env_config:
             observation: conv_observation_builder
             wandb:
-                entity: aburli
+                entity: andrinburli
                 project: jass-gym
                 group: MULTIAGENT
                 tags: [ "apex", "multiagent" ]
