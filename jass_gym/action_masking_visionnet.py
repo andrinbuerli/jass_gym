@@ -14,16 +14,16 @@ class ActionMaskingVisionNet(DQNTorchModel, TorchModelV2):
     def __init__(self, obs_space: gym.spaces.Space,
                  action_space: gym.spaces.Space, num_outputs: int,
                  model_config: ModelConfigDict, name: str, *args, **kwargs):
-        orig_space = getattr(obs_space, "original_space", obs_space)
-        assert isinstance(orig_space, gym.spaces.Dict) and \
-               "action_mask" in orig_space.spaces and \
-               "observations" in orig_space.spaces
+        self.orig_space = getattr(obs_space, "original_space", obs_space)
+        assert isinstance(self.orig_space, gym.spaces.Dict) and \
+               "action_mask" in self.orig_space.spaces and \
+               "observations" in self.orig_space.spaces
 
         super().__init__(obs_space, action_space, num_outputs, model_config,
                          name, *args, **kwargs)
 
         self.internal_model = VisionNetwork(
-            orig_space["observations"], action_space, num_outputs,
+            self.orig_space["observations"], action_space, num_outputs,
             model_config, name + "_internal")
 
         self.inf_action_mask = None
@@ -68,14 +68,33 @@ class ActionMaskingVisionNet(DQNTorchModel, TorchModelV2):
 
         return logits, state
 
+    def inference(self, obs: TensorType, actionmask: TensorType):
+        # Compute the unmasked logits.
+        logits, _ = self.internal_model({
+            "obs": obs
+        })
+
+        inf_action_mask = torch.clamp(torch.log(actionmask), min=float("-inf"))
+
+        action_scores = self.advantage_module(logits)
+        # compute masked logits
+        masked_action_scores = action_scores + inf_action_mask
+        return masked_action_scores
+
     def value_function(self):
         return self.internal_model.value_function()
 
     def get_state_value(self, model_out):
         """Returns the state value prediction for the given state embedding."""
         values = self.value_module(model_out)
-        #masked_values = values + self.inf_action_mask
+        # masked_values = values + self.inf_action_mask
         return values
+
+    def export(self, model_path):
+        traced = torch.jit.trace_module(
+            self.to("cpu"),
+            {"inference": (torch.rand(1, *self.orig_space["observations"].shape), torch.rand(1, self.action_space.n))})
+        traced.save(model_path)
 
 
 ModelCatalog.register_custom_model("action_masking_visionnet", ActionMaskingVisionNet)
