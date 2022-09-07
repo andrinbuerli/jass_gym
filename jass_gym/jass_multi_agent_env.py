@@ -35,9 +35,6 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
 
         self.rng = np.random.default_rng()
 
-        self.cum_reward = 0
-        self.cum_reward_team = np.zeros(2)
-
         self.prev_points = np.zeros((4, 2))
 
     def step(self, action_dict: MultiAgentDict) \
@@ -65,28 +62,39 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
         action = action_dict[self._game.state.player]
 
         current_player = self._game.state.player
+        self._game.perform_action_full(action)
+        all_done = self._game.state.nr_played_cards == 36
+
+        obs = self._get_observation(all_done)
+
+        next_player = self._game.state.player
+        observations = {next_player: obs} \
+            if not all_done else {p: obs for p in range(4)}
+        rewards = {next_player: self._get_reward(current_player)} \
+            if not all_done else {p: self._get_reward(p) for p in range(4)}
+        dones = {next_player: False, "__all__": False} \
+            if not all_done else {**{p: True for p in range(4)}, "__all__": True}
+        infos = {next_player: self._get_infos()} \
+            if not all_done else {p: self._get_infos() for p in range(4)}
+
+        return observations, rewards, dones, infos
+
+    def _get_infos(self):
+        return {
+            "cards_played": self._game.state.nr_played_cards,
+            "cards_in_trick": self._game.state.nr_cards_in_trick,
+            "forehand": self._game.state.forehand,
+            "trump": self._game.state.trump,
+            "dealer": self._game.state.dealer,
+        }
+
+    def _get_reward(self, current_player):
         team = current_player % 2
         other_team = (current_player + 1) % 2
-        self._game.perform_action_full(action)
         rewards = self._game.state.points - self.prev_points[current_player]
         reward = rewards[team] - rewards[other_team]
         self.prev_points[current_player] = np.copy(self._game.state.points)
-        done = self._game.state.hands.sum() == 0
-        obs = self._get_observation(done)
-
-        self.cum_reward_team += rewards
-
-        next_player = self._game.state.player
-        return {
-                   next_player: obs
-               }, {
-                   next_player: reward
-               }, {
-                   next_player: done,
-                   "__all__": done
-               }, {
-                   next_player: {"cum_reward_team": self.cum_reward_team}
-               }
+        return reward
 
     def _get_observation(self, done=False):
         obs = self.observation_builder(jasscpp.observation_from_state(self._game.state, -1)) if not done \
@@ -104,9 +112,6 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
         Returns:
             obs (dict): New observations for each ready agent.
         """
-
-        self.cum_reward = 0
-        self.cum_reward_team = np.zeros(2)
 
         dealer = self.rng.choice([0, 1, 2, 3])
         self._game.init_from_cards(dealer=dealer, hands=self._dealing_card_strategy.deal_cards())
