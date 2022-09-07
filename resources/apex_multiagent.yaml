@@ -2,7 +2,7 @@ schieber-jass-apex-multiagent:
     run: APEX
     env: schieber_jass_multi_agent_env
     stop:
-        training_iteration: 100_000_000
+        episodes_total: 2_000_000
     checkpoint_freq: 10
     checkpoint_at_end: True
     keep_checkpoints_num: 5
