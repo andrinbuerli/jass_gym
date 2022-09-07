@@ -62,7 +62,7 @@ class SchieberJassGymCli(Callable):
         with open(self.args.file, "r") as f:
             experiment = yaml.safe_load(f)
 
-        if self.args.export is not None:
+        if self.args.export:
             agent: Trainer = self.agent_from_experiment(experiment)
             agent.restore(self.args.checkpoint)
             agent.get_policy().model.export("model.pt")
