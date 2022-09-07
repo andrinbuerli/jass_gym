@@ -61,7 +61,6 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
 
         action = action_dict[self._game.state.player]
 
-        current_player = self._game.state.player
         self._game.perform_action_full(action)
         all_done = self._game.state.nr_played_cards == 36
 
@@ -70,7 +69,7 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
         next_player = self._game.state.player
         observations = {next_player: obs} \
             if not all_done else {p: obs for p in range(4)}
-        rewards = {next_player: self._get_reward(current_player)} \
+        rewards = {next_player: self._get_reward(next_player)} \
             if not all_done else {p: self._get_reward(p) for p in range(4)}
         dones = {next_player: False, "__all__": False} \
             if not all_done else {**{p: True for p in range(4)}, "__all__": True}
