@@ -5,12 +5,15 @@ import os
 
 from typing import Callable
 
-import jass_gym
 import yaml
 
 import ray
 import ray.tune
+from ray.rllib.agents import Trainer
+from ray.tune.registry import get_trainable_cls
 
+# noinspection PyUnresolvedReferences
+import jass_gym
 from jass_gym.progress_reporter import OnEpisodeCLIReporter
 from jass_gym.wandb_logger import WandbLoggerCallback
 
@@ -50,25 +53,38 @@ class SchieberJassGymCli(Callable):
 
         parser.add_argument("--file", help="File with experiment config", type=str)
         parser.add_argument("--local", help="Run ray in local mode", action='store_true')
+        parser.add_argument("--checkpoint", help="checkpoint to restore", default=None)
+        parser.add_argument("--export", help="export checkpoint", action='store_true')
         parser.add_argument("--log", help="Log data to wandb", action='store_true')
-
         self.args, self.unknown_args = parser.parse_known_args()
 
     def __call__(self):
         with open(self.args.file, "r") as f:
             experiment = yaml.safe_load(f)
 
-        loggers = [
-            WandbLoggerCallback(
-                api_key_file=os.path.join(os.path.dirname(__file__), "../.wandbkey"),
-            )
-        ] if self.args.log else []
+        if self.args.export is not None:
+            agent: Trainer = self.agent_from_experiment(experiment)
+            agent.restore(self.args.checkpoint)
+            agent.get_policy().model.export("model.pt")
+        else:
+            loggers = [
+                WandbLoggerCallback(
+                    api_key_file=os.path.join(os.path.dirname(__file__), "../.wandbkey"),
+                )
+            ] if self.args.log else []
 
-        reporter = OnEpisodeCLIReporter(metric_columns=self.CLI_METRICS)
+            reporter = OnEpisodeCLIReporter(metric_columns=self.CLI_METRICS)
 
-        ray.init(local_mode=self.args.local)
-        ray.tune.run_experiments(experiment, verbose=True, callbacks=loggers, progress_reporter=reporter)
-        ray.shutdown()
+            ray.init(local_mode=self.args.local)
+            ray.tune.run_experiments(experiment, verbose=True, callbacks=loggers, progress_reporter=reporter)
+            ray.shutdown()
+
+    @staticmethod
+    def agent_from_experiment(experiment_config) -> Trainer:
+        experiment_config = experiment_config[list(experiment_config.keys())[0]]
+        trainer_cls = get_trainable_cls(experiment_config["run"])
+        agent: Trainer = trainer_cls(config=experiment_config["config"], env=experiment_config["env"])
+        return agent
 
 
 def main():
