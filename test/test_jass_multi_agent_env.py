@@ -59,10 +59,12 @@ def test_episode():
     done = {"__all__": False}
 
     i = 0
+    data = []
     while not done["__all__"]:
         player = env._game.state.player
         action = np.flatnonzero(obs[player]["action_mask"])[0]
         obs, reward, done, info = env.step({player: action})
+        data.append((obs, reward, done, info))
         i += 1
 
     assert 35 < i < 38

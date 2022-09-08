@@ -80,11 +80,12 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
 
     def _get_infos(self):
         return {
-            "cards_played": self._game.state.nr_played_cards,
-            "cards_in_trick": self._game.state.nr_cards_in_trick,
-            "forehand": self._game.state.forehand,
-            "trump": self._game.state.trump,
-            "dealer": self._game.state.dealer,
+            "env_max_points": max(self._game.state.points),
+            "env_cards_played": self._game.state.nr_played_cards,
+            "env_cards_in_trick": self._game.state.nr_cards_in_trick,
+            "env_forehand": self._game.state.forehand,
+            "env_trump": self._game.state.trump,
+            "env_dealer": self._game.state.dealer,
         }
 
     def _get_reward(self, current_player):

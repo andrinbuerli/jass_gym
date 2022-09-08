@@ -2,6 +2,8 @@ import argparse
 import collections
 import logging
 import os
+import re
+from pathlib import Path
 
 from typing import Callable
 
@@ -14,6 +16,7 @@ from ray.tune.registry import get_trainable_cls
 
 # noinspection PyUnresolvedReferences
 import jass_gym
+from jass_gym.metrics_callback import MetricsCallback
 from jass_gym.progress_reporter import OnEpisodeCLIReporter
 from jass_gym.wandb_logger import WandbLoggerCallback
 
@@ -53,7 +56,7 @@ class SchieberJassGymCli(Callable):
 
         parser.add_argument("--file", help="File with experiment config", type=str)
         parser.add_argument("--local", help="Run ray in local mode", action='store_true')
-        parser.add_argument("--checkpoint", help="checkpoint to restore", default=None)
+        parser.add_argument("--latest_checkpoint", help="checkpoint to restore", default=None)
         parser.add_argument("--export", help="export checkpoint", action='store_true')
         parser.add_argument("--log", help="Log data to wandb", action='store_true')
         self.args, self.unknown_args = parser.parse_known_args()
@@ -64,7 +67,11 @@ class SchieberJassGymCli(Callable):
 
         if self.args.export:
             agent: Trainer = self.agent_from_experiment(experiment)
-            agent.restore(self.args.checkpoint)
+            if self.args.latest_checkpoint is not None:
+                folder = max([x for x in Path(self.args.latest_checkpoint).iterdir() if x.is_dir()], key=os.path.getmtime)
+                checkpoint = folder / re.sub("_0*", "-", folder.name)
+                print(f"restoring checkpoint at {checkpoint}")
+                agent.restore(str(checkpoint))
             agent.get_policy().model.export("model.pt")
         else:
             loggers = [
@@ -72,6 +79,8 @@ class SchieberJassGymCli(Callable):
                     api_key_file=os.path.join(os.path.dirname(__file__), "../.wandbkey"),
                 )
             ] if self.args.log else []
+
+            list(experiment.values())[0]["config"]["callbacks"] = MetricsCallback
 
             reporter = OnEpisodeCLIReporter(metric_columns=self.CLI_METRICS)
 
