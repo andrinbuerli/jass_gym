@@ -14,7 +14,6 @@ tqdm
 numpy~=1.18.5
 pytest~=7.1.2
 PyYAML~=5.4.1
-jasscpp~=0.0.1
 gym~=0.18.3
 ray~=1.7.0
 setuptools~=58.0.4
