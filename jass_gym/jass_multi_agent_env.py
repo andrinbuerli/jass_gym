@@ -90,9 +90,8 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
 
     def _get_reward(self, current_player):
         team = current_player % 2
-        other_team = (current_player + 1) % 2
         rewards = self._game.state.points - self.prev_points[current_player]
-        reward = rewards[team] - rewards[other_team]
+        reward = rewards[team]
         self.prev_points[current_player] = np.copy(self._game.state.points)
         return reward
 
