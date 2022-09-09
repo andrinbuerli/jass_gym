@@ -52,20 +52,49 @@ def test_step():
     assert bool(done[next_player]) is False
 
 
-def test_episode():
+def test_episode_len():
     env = SchieberJassMultiAgentEnv(ConvObservationBuilder())
     obs = env.reset()
 
     done = {"__all__": False}
 
-    i = 0
     data = []
     while not done["__all__"]:
         player = env._game.state.player
         action = np.flatnonzero(obs[player]["action_mask"])[0]
         obs, reward, done, info = env.step({player: action})
         data.append((obs, reward, done, info))
-        i += 1
 
-    assert 35 < i < 38
+    assert 35 < len(data) < 38
 
+
+def test_episode_reward():
+    env = SchieberJassMultiAgentEnv(ConvObservationBuilder())
+    obs = env.reset()
+
+    done = {"__all__": False}
+
+    data = []
+    while not done["__all__"]:
+        player = env._game.state.player
+        action = np.flatnonzero(obs[player]["action_mask"])[0]
+        obs, reward, done, info = env.step({player: action})
+        data.append((obs, reward, done, info))
+
+    assert np.array([y for x in data for y in x[1].values()]).sum() == (157 * 2)
+
+
+def test_episode_reward_after_reset():
+    env = SchieberJassMultiAgentEnv(ConvObservationBuilder())
+    obs = env.reset()
+
+    for _ in range(3):
+        done = {"__all__": False}
+        data = []
+        while not done["__all__"]:
+            player = env._game.state.player
+            action = np.flatnonzero(obs[player]["action_mask"])[0]
+            obs, reward, done, info = env.step({player: action})
+            data.append((obs, reward, done, info))
+        obs = env.reset()
+        assert np.array([y for x in data for y in x[1].values()]).sum() == (157 * 2)
