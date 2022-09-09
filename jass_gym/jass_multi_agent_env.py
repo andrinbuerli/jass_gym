@@ -112,6 +112,7 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
             obs (dict): New observations for each ready agent.
         """
 
+        self.prev_points = np.zeros((4, 2))
         dealer = self.rng.choice([0, 1, 2, 3])
         self._game.init_from_cards(dealer=dealer, hands=self._dealing_card_strategy.deal_cards())
 
