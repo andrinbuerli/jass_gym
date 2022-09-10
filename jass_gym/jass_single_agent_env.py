@@ -5,7 +5,7 @@ import numpy as np
 import gym
 from gym.spaces import Discrete, Dict, Box
 from jass.arena.dealing_card_random_strategy import DealingCardRandomStrategy
-from jass.game.const import ACTION_SET_FULL_SIZE
+from jass.game.const import ACTION_SET_FULL_SIZE, team
 
 from ray.tune.registry import register_env
 
@@ -56,12 +56,14 @@ class SchieberJassSingleAgentEnv(gym.Env):
             raise ValueError("Env needs to be reset initially")
 
         prev_points = np.copy(self._game.state.points)
-        player = self._game.state.player
-        team = player % 2
-        other_team = (player + 1) % 2
         self._game.perform_action_full(action)
         rewards = self._game.state.points - prev_points
-        reward = rewards[team] - rewards[other_team]
+        next_player = self._game.state.player
+        if next_player > 0:
+            next_team = team[next_player]
+            reward = rewards[next_team]
+        else:
+            reward = rewards.max()  # if last card in last trick
         done = self._game.state.hands.sum() == 0
         obs = self._get_observation(done)
 
@@ -96,9 +98,6 @@ class SchieberJassSingleAgentEnv(gym.Env):
         Returns:
             observation (object): the initial observation.
         """
-
-        self.cum_reward = 0
-        self.cum_reward_team = np.zeros(2)
 
         dealer = self.rng.choice([0, 1, 2, 3])
         self._game.init_from_cards(dealer=dealer, hands=self._dealing_card_strategy.deal_cards())

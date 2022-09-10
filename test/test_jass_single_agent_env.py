@@ -54,3 +54,33 @@ def test_episode():
 
     assert 35 < i < 38
 
+
+def test_episode_reward():
+    env = SchieberJassSingleAgentEnv(ConvObservationBuilder())
+    obs = env.reset()
+
+    done = False
+
+    data = []
+    while not done:
+        action = np.flatnonzero(obs["action_mask"])[0]
+        obs, reward, done, info = env.step(action)
+        data.append((obs, reward, done, info))
+
+    assert np.array([x[1] for x in data]).sum() == 157
+
+
+def test_episode_reward_after_reset():
+    env = SchieberJassSingleAgentEnv(ConvObservationBuilder())
+    obs = env.reset()
+
+    for i in range(3):
+        print(i)
+        done = False
+        data = []
+        while not done:
+            action = np.flatnonzero(obs["action_mask"])[0]
+            obs, reward, done, info = env.step(action)
+            data.append((obs, reward, done, info))
+        obs = env.reset()
+        assert np.array([x[1] for x in data]).sum() == 157
