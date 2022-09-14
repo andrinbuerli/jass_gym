@@ -37,6 +37,8 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
 
         self.prev_points = np.zeros((4, 2))
 
+        self.t = 0
+
     def step(self, action_dict: MultiAgentDict) \
             -> Tuple[MultiAgentDict, MultiAgentDict, MultiAgentDict, MultiAgentDict]:
         """Returns observations from ready agents.
@@ -76,6 +78,8 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
         infos = {next_player: self._get_infos()} \
             if not all_done else {p: self._get_infos() for p in range(4)}
 
+        self.t += 1
+
         return observations, rewards, dones, infos
 
     def _get_infos(self):
@@ -86,6 +90,7 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
             "env_forehand": self._game.state.forehand,
             "env_trump": self._game.state.trump,
             "env_dealer": self._game.state.dealer,
+            "t": self.t
         }
 
     def _get_reward(self, current_player):
@@ -117,6 +122,8 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
         self._game.init_from_cards(dealer=dealer, hands=self._dealing_card_strategy.deal_cards())
 
         obs = self._get_observation()
+
+        self.t = 0
 
         return {
             self._game.state.player: obs
