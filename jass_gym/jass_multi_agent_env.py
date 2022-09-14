@@ -55,6 +55,8 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
                 4) Optional info values for each agent id.
         """
 
+        self.t += 1
+
         if self._game.state.hands.sum() < 0:
             raise ValueError("Env needs to be reset initially")
 
@@ -77,8 +79,6 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
             if not all_done else {**{p: True for p in range(4)}, "__all__": True}
         infos = {next_player: self._get_infos()} \
             if not all_done else {p: self._get_infos() for p in range(4)}
-
-        self.t += 1
 
         return observations, rewards, dones, infos
 
