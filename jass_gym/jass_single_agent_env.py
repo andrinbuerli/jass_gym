@@ -64,7 +64,7 @@ class SchieberJassSingleAgentEnv(gym.Env):
             reward = rewards[next_team]
         else:
             reward = rewards.max()  # if last card in last trick
-        done = self._game.state.hands.sum() == 0
+        done = self._game.state.nr_played_cards == 36
         obs = self._get_observation(done)
 
         self.cum_reward += reward
