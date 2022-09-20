@@ -63,14 +63,14 @@ WORKDIR /app
 
 # add user
 RUN chown -hR ray /app
-USER user
+USER ray
 
 RUN git config --global --add safe.directory /app
 
 RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
 
-RUN pip install -v -e .
+RUN pip install -v --no-cache -e .
 
 RUN pip install -r requirements-dev.txt
 

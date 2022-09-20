@@ -15,9 +15,6 @@ import ray.tune
 from ray.rllib.agents import Trainer
 from ray.tune.registry import get_trainable_cls
 
-# noinspection PyUnresolvedReferences
-import jass_gym
-
 from ray.tune.result import (
     TRAINING_ITERATION,
     TIME_TOTAL_S,
@@ -29,6 +26,8 @@ from jass_gym.logging.metrics_callback import MetricsCallback
 from jass_gym.logging.progress_reporter import OnEpisodeCLIReporter
 from jass_gym.logging.wandb_logger import WandbLoggerCallback
 
+# noinspection PyUnresolvedReferences
+import jass_gym
 
 class SchieberJassGymCli(Callable):
     """

@@ -1,7 +1,9 @@
 version: '3.8'
 services:
   jass_gym:
-    build: .
+    build:
+      context: .
+      network: host
     network_mode: host
     volumes:
       - .:/app
