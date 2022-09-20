@@ -12,7 +12,7 @@ $ pip install -v -e .
 Run tests to verify local setup
 
 ```bash
-$ sjmz (--nodocker) --test
+$ sjgym (--nodocker) --test
 ```
 
 ## Training

@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from jass_gym.conv_observation_builder import ConvObservationBuilder
-from jass_gym.jass_multi_agent_env import SchieberJassMultiAgentEnv
+from jass_gym.observation.conv_observation_builder import ConvObservationBuilder, ObservationBuilder
+from jass_gym.env.jass_multi_agent_env import SchieberJassMultiAgentEnv
 
 
 def test_reset():

@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from jass_gym.conv_observation_builder import ConvObservationBuilder
-from jass_gym.jass_single_agent_env import SchieberJassSingleAgentEnv
+from jass_gym.observation.conv_observation_builder import ConvObservationBuilder, ObservationBuilder
+from jass_gym.env.jass_single_agent_env import SchieberJassSingleAgentEnv
 
 
 def test_reset():
@@ -67,7 +67,7 @@ def test_episode_reward():
         obs, reward, done, info = env.step(action)
         data.append((obs, reward, done, info))
 
-    assert np.array([x[1] for x in data]).sum() == 157
+    assert np.array([x[1] for x in data]).sum() == 0
 
 
 def test_episode_reward_after_reset():
@@ -83,4 +83,4 @@ def test_episode_reward_after_reset():
             obs, reward, done, info = env.step(action)
             data.append((obs, reward, done, info))
         obs = env.reset()
-        assert np.array([x[1] for x in data]).sum() == 157
+        assert np.array([x[1] for x in data]).sum() == 0

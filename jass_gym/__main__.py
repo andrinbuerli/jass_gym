@@ -29,6 +29,7 @@ from jass_gym.logging.wandb_logger import WandbLoggerCallback
 # noinspection PyUnresolvedReferences
 import jass_gym
 
+
 class SchieberJassGymCli(Callable):
     """
     Entrypoint for the sjgym CLI
@@ -79,35 +80,37 @@ class SchieberJassGymCli(Callable):
             os.system(command)
 
     def _run_local(self):
-        with open(self.args.file, "r") as f:
-            experiment = yaml.safe_load(f)
-        if self.args.export:
-            agent: Trainer = self.agent_from_experiment(experiment)
-            if self.args.latest_checkpoint is not None:
-                folder = max([x for x in Path(self.args.latest_checkpoint).iterdir() if x.is_dir()],
-                             key=os.path.getmtime)
-                checkpoint = folder / re.sub("_0*", "-", folder.name)
-                print(f"restoring checkpoint at {checkpoint}")
-                agent.restore(str(checkpoint))
-            agent.get_policy().model.export("model.pt")
-        elif self.args.test:
+
+        if self.args.test:
             path = Path(__file__).parent.parent / 'test'
             logging.info(f"Running test at {path}")
             os.system(f"pytest --forked -n auto --timeout=120 {path} ")
         else:
-            loggers = [
-                WandbLoggerCallback(
-                    api_key_file=os.path.join(os.path.dirname(__file__), "../.wandbkey"),
-                )
-            ] if self.args.log else []
+            with open(self.args.file, "r") as f:
+                experiment = yaml.safe_load(f)
+            if self.args.export:
+                agent: Trainer = self.agent_from_experiment(experiment)
+                if self.args.latest_checkpoint is not None:
+                    folder = max([x for x in Path(self.args.latest_checkpoint).iterdir() if x.is_dir()],
+                                 key=os.path.getmtime)
+                    checkpoint = folder / re.sub("_0*", "-", folder.name)
+                    print(f"restoring checkpoint at {checkpoint}")
+                    agent.restore(str(checkpoint))
+                agent.get_policy().model.export("model.pt")
+            else:
+                loggers = [
+                    WandbLoggerCallback(
+                        api_key_file=os.path.join(os.path.dirname(__file__), "../.wandbkey"),
+                    )
+                ] if self.args.log else []
 
-            list(experiment.values())[0]["config"]["callbacks"] = MetricsCallback
+                list(experiment.values())[0]["config"]["callbacks"] = MetricsCallback
 
-            reporter = OnEpisodeCLIReporter(metric_columns=self.CLI_METRICS)
+                reporter = OnEpisodeCLIReporter(metric_columns=self.CLI_METRICS)
 
-            ray.init(local_mode=self.args.local)
-            ray.tune.run_experiments(experiment, verbose=True, callbacks=loggers, progress_reporter=reporter)
-            ray.shutdown()
+                ray.init(local_mode=self.args.local)
+                ray.tune.run_experiments(experiment, verbose=True, callbacks=loggers, progress_reporter=reporter)
+                ray.shutdown()
 
     @staticmethod
     def agent_from_experiment(experiment_config) -> Trainer:
