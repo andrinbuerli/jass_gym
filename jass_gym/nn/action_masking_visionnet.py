@@ -69,6 +69,14 @@ class ActionMaskingVisionNet(DQNTorchModel, TorchModelV2):
         return logits, state
 
     def inference(self, obs: TensorType, actionmask: TensorType):
+        """
+        Method for export
+
+        :param obs: batched observation
+        :param actionmask: batched actionmask
+        :return: computed Q values
+        """
+
         # Compute the unmasked logits.
         logits, _ = self.internal_model({
             "obs": obs
@@ -83,12 +91,6 @@ class ActionMaskingVisionNet(DQNTorchModel, TorchModelV2):
 
     def value_function(self):
         return self.internal_model.value_function()
-
-    def get_state_value(self, model_out):
-        """Returns the state value prediction for the given state embedding."""
-        values = self.value_module(model_out)
-        # masked_values = values + self.inf_action_mask
-        return values
 
     def export(self, model_path):
         traced = torch.jit.trace_module(

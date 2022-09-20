@@ -3,16 +3,14 @@ from typing import Tuple
 
 import jasscpp
 import numpy as np
-import gym
-from gym.spaces import Discrete, Dict, Box
+from gym.spaces import Box, Dict, Discrete
 from jass.arena.dealing_card_random_strategy import DealingCardRandomStrategy
 from jass.game.const import ACTION_SET_FULL_SIZE, team
 from ray.rllib import MultiAgentEnv
 from ray.rllib.utils.typing import MultiAgentDict
-
 from ray.tune.registry import register_env
 
-from jass_gym.conv_observation_builder import ObservationBuilder, ConvObservationBuilder
+from jass_gym.observation.conv_observation_builder import ConvObservationBuilder, ObservationBuilder
 
 
 class SchieberJassMultiAgentEnv(MultiAgentEnv):

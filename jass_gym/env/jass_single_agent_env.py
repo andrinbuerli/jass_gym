@@ -9,7 +9,7 @@ from jass.game.const import ACTION_SET_FULL_SIZE, next_player, team
 
 from ray.tune.registry import register_env
 
-from jass_gym.conv_observation_builder import ObservationBuilder, ConvObservationBuilder
+from jass_gym.observation.conv_observation_builder import ConvObservationBuilder, ObservationBuilder
 
 
 class SchieberJassSingleAgentEnv(gym.Env):
