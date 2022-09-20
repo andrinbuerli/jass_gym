@@ -5,7 +5,7 @@ import numpy as np
 import gym
 from gym.spaces import Discrete, Dict, Box
 from jass.arena.dealing_card_random_strategy import DealingCardRandomStrategy
-from jass.game.const import ACTION_SET_FULL_SIZE, team
+from jass.game.const import ACTION_SET_FULL_SIZE, next_player, team
 
 from ray.tune.registry import register_env
 
@@ -32,9 +32,6 @@ class SchieberJassSingleAgentEnv(gym.Env):
 
         self.rng = np.random.default_rng()
 
-        self.cum_reward = 0
-        self.cum_reward_team = np.zeros(2)
-
     def step(self, action):
         """Run one timestep of the environment's dynamics. When end of
         episode is reached, you are responsible for calling `reset()`
@@ -58,21 +55,15 @@ class SchieberJassSingleAgentEnv(gym.Env):
         prev_points = np.copy(self._game.state.points)
         self._game.perform_action_full(action)
         rewards = self._game.state.points - prev_points
-        next_player = self._game.state.player
-        if next_player > 0:
-            next_team = team[next_player]
-            reward = rewards[next_team]
-        else:
-            reward = rewards.max()  # if last card in last trick
+        player = self._game.state.player
+        current_team = team[next_player[player]]
+        other_team = team[next_player[player]]
+        reward = rewards[current_team] - rewards[other_team]
         done = self._game.state.nr_played_cards == 36
         obs = self._get_observation(done)
 
-        self.cum_reward += reward
-        self.cum_reward_team += rewards
-
         return obs, reward, done, {
-            "cum_reward": self.cum_reward,
-            "cum_reward_team": self.cum_reward_team
+            "team_reward": rewards
         }
 
     def _get_observation(self, done=False):
