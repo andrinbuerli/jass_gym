@@ -3,6 +3,7 @@ import collections
 import logging
 import os
 import re
+import sys
 from pathlib import Path
 
 from typing import Callable
@@ -54,6 +55,8 @@ class SchieberJassGymCli(Callable):
 
         parser = argparse.ArgumentParser(description="Run a rllib experiment with the Schieber Jass Environment")
 
+        parser.add_argument("--nodocker", help="Run not in docker", action='store_true')
+        parser.add_argument("--test", help="Run tests", action='store_true')
         parser.add_argument("--file", help="File with experiment config", type=str)
         parser.add_argument("--local", help="Run ray in local mode", action='store_true')
         parser.add_argument("--latest_checkpoint", help="checkpoint to restore", default=None)
@@ -62,17 +65,35 @@ class SchieberJassGymCli(Callable):
         self.args, self.unknown_args = parser.parse_known_args()
 
     def __call__(self):
+        if self.args.nodocker:
+            self._run_local()
+        else:
+            command = 'bash -c "'
+            command += 'sjgym --nodocker ' + " ".join(sys.argv[1:])
+            command += '"'
+
+            command = "docker-compose run  jass_gym " + command
+
+            print("executing", command, "in docker container")
+
+            os.system(command)
+
+    def _run_local(self):
         with open(self.args.file, "r") as f:
             experiment = yaml.safe_load(f)
-
         if self.args.export:
             agent: Trainer = self.agent_from_experiment(experiment)
             if self.args.latest_checkpoint is not None:
-                folder = max([x for x in Path(self.args.latest_checkpoint).iterdir() if x.is_dir()], key=os.path.getmtime)
+                folder = max([x for x in Path(self.args.latest_checkpoint).iterdir() if x.is_dir()],
+                             key=os.path.getmtime)
                 checkpoint = folder / re.sub("_0*", "-", folder.name)
                 print(f"restoring checkpoint at {checkpoint}")
                 agent.restore(str(checkpoint))
             agent.get_policy().model.export("model.pt")
+        elif self.args.test:
+            path = Path(__file__).parent.parent / 'test'
+            logging.info(f"Running test at {path}")
+            os.system(f"pytest --forked -n auto --timeout=120 {path} ")
         else:
             loggers = [
                 WandbLoggerCallback(
