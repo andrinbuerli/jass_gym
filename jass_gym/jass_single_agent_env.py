@@ -59,7 +59,7 @@ class SchieberJassSingleAgentEnv(gym.Env):
         current_team = team[next_player[player]]
         other_team = team[next_player[player]]
         reward = rewards[current_team] - rewards[other_team]
-        done = self._game.state.nr_played_cards == 36
+        done = self._game.state.player == -1
         obs = self._get_observation(done)
 
         return obs, reward, done, {

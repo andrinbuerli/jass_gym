@@ -66,7 +66,7 @@ class SchieberJassMultiAgentEnv(MultiAgentEnv):
         action = action_dict[self._game.state.player]
 
         self._game.perform_action_full(action)
-        all_done = self._game.state.nr_played_cards == 36
+        all_done = self._game.state.player == -1
 
         obs = self._get_observation(all_done)
 
